@@ -1,0 +1,14 @@
+{
+  "name": "betonko-analysis",
+  "version": "1.0.0",
+  "description": "BetonKo project analysis and development tools",
+  "main": "analysis/project-scanner.js",
+  "scripts": {
+    "scan": "node analysis/project-scanner.js",
+    "examine": "node analysis/file-examiner.js",
+    "analyze": "npm run scan && npm run examine"
+  },
+  "keywords": ["betonko", "analysis", "laravel", "project"],
+  "author": "Development Team",
+  "license": "MIT"
+}
