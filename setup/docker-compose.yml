@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Laravel Backend
+  backend:
+    build:
+      context: ./docker/backend
+      dockerfile: Dockerfile
+    container_name: betonko-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./BetonKo-Back-End:/var/www/html
+      - ./docker/backend/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_DATABASE=betonko
+      - DB_USERNAME=betonko_user
+      - DB_PASSWORD=betonko_password
+    depends_on:
+      - database
+      - redis
+    networks:
+      - betonko-network
+
+  # Frontend (Node.js)
+  frontend:
+    build:
+      context: ./docker/frontend
+      dockerfile: Dockerfile
+    container_name: betonko-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./BetonKo-Front-Endzip:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    networks:
+      - betonko-network
+
+  # MySQL Database
+  database:
+    image: mysql:8.0
+    container_name: betonko-database
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: betonko
+      MYSQL_USER: betonko_user
+      MYSQL_PASSWORD: betonko_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - betonko-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: betonko-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - betonko-network
+
+  # phpMyAdmin (Optional)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: betonko-phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: database
+      PMA_USER: betonko_user
+      PMA_PASSWORD: betonko_password
+    depends_on:
+      - database
+    networks:
+      - betonko-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  betonko-network:
+    driver: bridge
